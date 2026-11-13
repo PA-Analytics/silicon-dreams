@@ -1,0 +1,827 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#000080" />
+    <meta
+      name="description"
+      content="Silicon Dreams — Escena 3D interactiva WebGPU / TSL con estética weirdcore y Windows 95. Explora Día y Noche."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Silicon Dreams — Escena 3D Interactiva" />
+    <meta
+      property="og:description"
+      content="Explora la torre en 3D tiempo real (WebGPU / TSL) en modo Día y Noche con estética weirdcore y Windows 95."
+    />
+    <meta property="og:image" content="/og-preview.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Silicon Dreams — Escena 3D Interactiva" />
+    <meta
+      name="twitter:description"
+      content="Explora la torre en 3D tiempo real (WebGPU / TSL) en modo Día y Noche con estética weirdcore y Windows 95."
+    />
+    <meta name="twitter:image" content="/og-preview.jpg" />
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%23000080'/%3E%3Crect x='2' y='2' width='12' height='10' fill='%23c0c0c0'/%3E%3Crect x='3' y='3' width='10' height='8' fill='%23008080'/%3E%3Crect x='5' y='5' width='6' height='4' fill='%23fff'/%3E%3Crect x='7' y='6' width='2' height='2' fill='%23000'/%3E%3C/svg%3E"
+    />
+    <title>Silicon Dreams — Three.js WebGPU / TSL</title>
+    <link rel="preload" href="/scene-meta.json" as="fetch" crossorigin />
+    <link rel="preload" href="/models/silicon-dreams-v1.glb" as="fetch" crossorigin />
+    <style>
+      :root {
+        --win-face: #c0c0c0;
+        --win-hi: #ffffff;
+        --win-light: #dfdfdf;
+        --win-shadow: #808080;
+        --win-dark: #000000;
+        --win-field: #ffffff;
+        --win-title-a: #000080;
+        --win-title-b: #1084d0;
+        --win-title-ink: #ffffff;
+        --win-ink: #000000;
+        --win-muted: #404040;
+        --win-font: "Tahoma", "MS Sans Serif", "Microsoft Sans Serif", Arial, sans-serif;
+        --win-mono: "Fixedsys", "Lucida Console", "Courier New", monospace;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100dvh;
+        overflow: hidden;
+        overscroll-behavior: none;
+        background: #008080;
+        color: var(--win-ink);
+        font-family: var(--win-font);
+        font-size: 11px;
+        -webkit-font-smoothing: none;
+        -webkit-tap-highlight-color: transparent;
+        user-select: none;
+      }
+
+      #app {
+        position: fixed;
+        inset: 0;
+        height: 100dvh;
+      }
+
+      #app canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+        touch-action: none;
+      }
+
+      /* Classic Win95 raised / sunken bevel utilities */
+      .win-window {
+        pointer-events: auto;
+        background: var(--win-face);
+        color: var(--win-ink);
+        border: 2px solid;
+        border-color: var(--win-hi) var(--win-dark) var(--win-dark) var(--win-hi);
+        box-shadow:
+          inset 1px 1px 0 var(--win-light),
+          inset -1px -1px 0 var(--win-shadow),
+          2px 2px 0 rgba(0, 0, 0, 0.45);
+        padding: 2px;
+      }
+
+      .win-titlebar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        background: linear-gradient(90deg, var(--win-title-a), var(--win-title-b));
+        color: var(--win-title-ink);
+        padding: 2px 3px 2px 5px;
+        font-weight: 700;
+        font-size: 11px;
+        line-height: 14px;
+        letter-spacing: 0.01em;
+      }
+
+      .win-title-left {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        min-width: 0;
+      }
+
+      .win-title-left h1 {
+        margin: 0;
+        font-size: 11px;
+        font-weight: 700;
+        white-space: nowrap;
+      }
+
+      .win-sys-btns {
+        display: inline-flex;
+        gap: 2px;
+        flex-shrink: 0;
+      }
+
+      .win-btn {
+        background: var(--win-face);
+        color: var(--win-ink);
+        font-family: var(--win-font);
+        font-size: 11px;
+        line-height: 1;
+        border: 2px solid;
+        border-color: var(--win-hi) var(--win-dark) var(--win-dark) var(--win-hi);
+        box-shadow: inset -1px -1px 0 var(--win-shadow), inset 1px 1px 0 var(--win-light);
+        padding: 3px 8px;
+        cursor: pointer;
+      }
+
+      .win-btn:active,
+      .win-btn.is-pressed {
+        border-color: var(--win-dark) var(--win-hi) var(--win-hi) var(--win-dark);
+        box-shadow: inset 1px 1px 0 var(--win-shadow);
+        background:
+          repeating-conic-gradient(#d8d8d8 0% 25%, #c0c0c0 0% 50%) 50% / 2px 2px;
+        font-weight: 700;
+        padding: 4px 7px 2px 9px;
+      }
+
+      .win-btn-mini {
+        width: 16px;
+        height: 14px;
+        padding: 0;
+        font-size: 10px;
+        font-weight: 700;
+        display: inline-grid;
+        place-items: center;
+      }
+
+      .win-sunken {
+        background: var(--win-face);
+        border: 1px solid;
+        border-color: var(--win-shadow) var(--win-hi) var(--win-hi) var(--win-shadow);
+        box-shadow: inset 1px 1px 0 rgba(0, 0, 0, 0.2);
+      }
+
+      /* Loading screen: Win95 setup/boot dialog over BSOD/teal void */
+      #loading {
+        position: fixed;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        background: #000082;
+        z-index: 30;
+        transition: opacity 0.2s ease, visibility 0.2s ease;
+      }
+      #loading.hidden {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+      }
+      .loader-dialog {
+        width: min(340px, 90vw);
+      }
+      .loader-body {
+        padding: 12px 12px 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .loader-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .loader-status {
+        font-size: 11px;
+        color: var(--win-ink);
+      }
+      .loader-bar {
+        width: 100%;
+        height: 18px;
+        padding: 2px;
+        background: var(--win-field);
+        border: 2px solid;
+        border-color: var(--win-shadow) var(--win-hi) var(--win-hi) var(--win-shadow);
+      }
+      .loader-fill {
+        width: 0%;
+        height: 100%;
+        background: repeating-linear-gradient(
+          90deg,
+          #000080 0px,
+          #000080 9px,
+          transparent 9px,
+          transparent 11px
+        );
+        transition: width 0.2s ease;
+      }
+
+      /* HUD grid */
+      .hud {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: 10;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+
+      .top-bar {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 8px;
+        padding: 8px;
+      }
+
+      .brand {
+        min-width: 244px;
+      }
+
+      .brand-body {
+        padding: 6px 6px 4px;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+      }
+
+      .brand-controls {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+
+      .mode-switch {
+        display: inline-flex;
+        gap: 4px;
+      }
+
+      .mode-btn {
+        min-width: 58px;
+        text-align: center;
+      }
+
+      .mode-btn.active {
+        border-color: var(--win-dark) var(--win-hi) var(--win-hi) var(--win-dark);
+        box-shadow: inset 1px 1px 0 var(--win-shadow);
+        background:
+          repeating-conic-gradient(#dcdcdc 0% 25%, #c0c0c0 0% 50%) 50% / 2px 2px;
+        font-weight: 700;
+        outline: 1px dotted #000;
+        outline-offset: -4px;
+      }
+
+      .mode-btn.active[data-mode='night'] {
+        color: #800020;
+      }
+
+      .status-strip {
+        display: flex;
+        align-items: stretch;
+        gap: 3px;
+      }
+
+      .status-cell {
+        padding: 2px 5px;
+        font-size: 10px;
+        color: var(--win-ink);
+        white-space: nowrap;
+      }
+
+      .status-cell.grow {
+        flex: 1 1 auto;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      /* Top-right Properties window */
+      .controls-panel {
+        min-width: 210px;
+        max-width: 276px;
+      }
+
+      .controls-body {
+        padding: 7px 8px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        max-height: 68vh;
+        overflow-x: hidden;
+        overflow-y: auto;
+      }
+
+      .controls-body.collapsed {
+        display: none;
+      }
+
+      .win-group {
+        border: 1px solid var(--win-shadow);
+        box-shadow: 1px 1px 0 var(--win-hi);
+        padding: 6px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .check-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        font-size: 11px;
+        color: var(--win-ink);
+        cursor: pointer;
+      }
+
+      .check-row input[type='checkbox'] {
+        appearance: none;
+        -webkit-appearance: none;
+        width: 13px;
+        height: 13px;
+        margin: 0;
+        background: var(--win-field);
+        border: 2px solid;
+        border-color: var(--win-shadow) var(--win-hi) var(--win-hi) var(--win-shadow);
+        display: grid;
+        place-content: center;
+        cursor: pointer;
+        flex-shrink: 0;
+      }
+
+      .check-row input[type='checkbox']:checked::after {
+        content: "";
+        width: 7px;
+        height: 4px;
+        border-left: 2px solid #000;
+        border-bottom: 2px solid #000;
+        transform: rotate(-45deg) translate(1px, -1px);
+      }
+
+      .select-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        font-size: 11px;
+        color: var(--win-ink);
+      }
+
+      .select-row select {
+        background: var(--win-field);
+        color: var(--win-ink);
+        border: 2px solid;
+        border-color: var(--win-shadow) var(--win-hi) var(--win-hi) var(--win-shadow);
+        font-family: var(--win-font);
+        padding: 2px 4px;
+        font-size: 11px;
+        cursor: pointer;
+      }
+
+      .slider-row {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        font-size: 11px;
+        color: var(--win-ink);
+      }
+
+      .slider-row div {
+        display: flex;
+        justify-content: space-between;
+      }
+
+      .slider-row input[type='range'] {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 100%;
+        height: 4px;
+        background: var(--win-field);
+        border: 1px solid;
+        border-color: var(--win-shadow) var(--win-hi) var(--win-hi) var(--win-shadow);
+        cursor: pointer;
+      }
+
+      .slider-row input[type='range']::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 11px;
+        height: 16px;
+        background: var(--win-face);
+        border: 2px solid;
+        border-color: var(--win-hi) var(--win-dark) var(--win-dark) var(--win-hi);
+      }
+
+      .slider-row input[type='range']::-moz-range-thumb {
+        width: 11px;
+        height: 16px;
+        border-radius: 0;
+        background: var(--win-face);
+        border: 2px solid;
+        border-color: var(--win-hi) var(--win-dark) var(--win-dark) var(--win-hi);
+      }
+
+      .slider-row.is-disabled {
+        opacity: 0.48;
+      }
+
+      .slider-row.is-disabled input[type='range'] {
+        cursor: not-allowed;
+      }
+
+      /* Classic Win95 bottom Taskbar */
+      .taskbar {
+        pointer-events: auto;
+        width: 100%;
+        background: var(--win-face);
+        border-top: 2px solid var(--win-hi);
+        box-shadow: inset 0 1px 0 var(--win-light);
+        padding: 3px 5px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+
+      .start-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 3px 7px;
+        font-weight: 700;
+        font-size: 11px;
+        border: 2px solid;
+        border-color: var(--win-hi) var(--win-dark) var(--win-dark) var(--win-hi);
+        box-shadow: inset -1px -1px 0 var(--win-shadow);
+        background: var(--win-face);
+        color: var(--win-ink);
+        flex-shrink: 0;
+      }
+
+      .taskbar-divider {
+        width: 2px;
+        height: 20px;
+        border-left: 1px solid var(--win-shadow);
+        border-right: 1px solid var(--win-hi);
+        flex-shrink: 0;
+      }
+
+      .camera-dock {
+        flex: 1 1 auto;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 3px;
+        min-width: 0;
+      }
+
+      .cam-btn {
+        background: var(--win-face);
+        color: var(--win-ink);
+        font-family: var(--win-font);
+        font-size: 11px;
+        border: 2px solid;
+        border-color: var(--win-hi) var(--win-dark) var(--win-dark) var(--win-hi);
+        box-shadow: inset -1px -1px 0 var(--win-shadow), inset 1px 1px 0 var(--win-light);
+        padding: 2px 7px;
+        cursor: pointer;
+        white-space: nowrap;
+      }
+
+      .cam-btn:hover {
+        background: #cacaca;
+      }
+
+      .cam-btn.active {
+        border-color: var(--win-dark) var(--win-hi) var(--win-hi) var(--win-dark);
+        box-shadow: inset 1px 1px 0 var(--win-shadow);
+        background:
+          repeating-conic-gradient(#e4e4e4 0% 25%, #c0c0c0 0% 50%) 50% / 2px 2px;
+        font-weight: 700;
+        outline: 1px dotted #000;
+        outline-offset: -3px;
+      }
+
+      .cam-sep {
+        width: 2px;
+        height: 18px;
+        border-left: 1px solid var(--win-shadow);
+        border-right: 1px solid var(--win-hi);
+        margin: 0 2px;
+      }
+
+      .cam-btn.night-only {
+        color: #7a001c;
+      }
+
+      .cam-btn.night-only.active {
+        color: #7a001c;
+      }
+
+      button:focus-visible,
+      input:focus-visible,
+      select:focus-visible {
+        outline: 1px dotted #000;
+        outline-offset: -3px;
+      }
+
+      .night-only {
+        display: none;
+      }
+
+      body.mode-night .night-only {
+        display: flex;
+      }
+
+      body.mode-night .night-section {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        padding-top: 6px;
+        border-top: 1px solid var(--win-shadow);
+        box-shadow: inset 0 1px 0 var(--win-hi);
+      }
+
+      body.mode-night .day-only {
+        display: none;
+      }
+
+      @media (max-width: 640px) {
+        .top-bar {
+          flex-wrap: nowrap;
+          align-items: flex-start;
+          padding: max(6px, env(safe-area-inset-top)) 6px 0;
+          gap: 5px;
+        }
+        .brand {
+          flex: 1 1 auto;
+          min-width: 0;
+          max-width: none;
+        }
+        .brand .win-sys-btns,
+        .status-strip {
+          display: none;
+        }
+        .brand-body {
+          padding: 4px 5px;
+        }
+        .brand-controls {
+          gap: 5px;
+        }
+        .mode-btn {
+          min-width: 50px;
+          padding: 5px 8px;
+          font-size: 11px;
+        }
+        .controls-panel {
+          flex: 0 0 auto;
+          min-width: 0;
+          max-width: none;
+        }
+        .controls-panel .win-title-left span {
+          display: none;
+        }
+        .controls-panel .win-titlebar {
+          padding: 3px 4px;
+          gap: 4px;
+        }
+        .controls-body {
+          position: fixed;
+          left: 6px;
+          right: 6px;
+          top: calc(max(6px, env(safe-area-inset-top)) + 58px);
+          max-height: 54dvh;
+          background: var(--win-face);
+          border: 2px solid;
+          border-color: var(--win-hi) var(--win-dark) var(--win-dark) var(--win-hi);
+          box-shadow:
+            inset 1px 1px 0 var(--win-light),
+            inset -1px -1px 0 var(--win-shadow),
+            3px 3px 0 rgba(0, 0, 0, 0.45);
+          padding: 8px;
+          z-index: 25;
+        }
+        .check-row,
+        .select-row {
+          min-height: 28px;
+          font-size: 12px;
+        }
+        .check-row input[type='checkbox'] {
+          width: 16px;
+          height: 16px;
+        }
+        .taskbar {
+          padding: 4px 6px calc(4px + env(safe-area-inset-bottom));
+        }
+        .start-chip,
+        .taskbar-divider {
+          display: none;
+        }
+        .camera-dock {
+          flex-wrap: nowrap;
+          justify-content: flex-start;
+          overflow-x: auto;
+          overflow-y: hidden;
+          -webkit-overflow-scrolling: touch;
+          scrollbar-width: none;
+          gap: 4px;
+        }
+        .camera-dock::-webkit-scrollbar {
+          display: none;
+        }
+        .cam-btn {
+          min-height: 30px;
+          padding: 4px 9px;
+          font-size: 11.5px;
+          flex-shrink: 0;
+        }
+        .cam-sep {
+          flex-shrink: 0;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+
+    <div id="loading">
+      <div class="win-window loader-dialog">
+        <div class="win-titlebar">
+          <div class="win-title-left">
+            <span>Silicon_Dreams.exe</span>
+          </div>
+          <div class="win-sys-btns" aria-hidden="true">
+            <span class="win-btn win-btn-mini">?</span>
+            <span class="win-btn win-btn-mini">×</span>
+          </div>
+        </div>
+        <div class="loader-body">
+          <div class="loader-row">
+            <svg width="28" height="28" viewBox="0 0 16 16" aria-hidden="true" shape-rendering="crispEdges">
+              <rect x="2" y="2" width="12" height="9" fill="#000" />
+              <rect x="3" y="3" width="10" height="7" fill="#008080" />
+              <rect x="5" y="5" width="6" height="3" fill="#fff" />
+              <rect x="6" y="5" width="4" height="3" fill="#000080" />
+              <rect x="7" y="6" width="2" height="1" fill="#000" />
+              <rect x="6" y="11" width="4" height="2" fill="#808080" />
+              <rect x="4" y="13" width="8" height="2" fill="#000" />
+            </svg>
+            <div class="loader-status" id="loader-status">Inicializando WebGPU / TSL…</div>
+          </div>
+          <div class="loader-bar"><div class="loader-fill" id="loader-fill"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hud">
+      <div class="top-bar">
+        <div class="win-window brand">
+          <div class="win-titlebar">
+            <div class="win-title-left">
+              <svg width="13" height="13" viewBox="0 0 16 16" aria-hidden="true" shape-rendering="crispEdges">
+                <rect x="1" y="2" width="14" height="11" fill="#000" />
+                <rect x="2" y="3" width="12" height="9" fill="#1084d0" />
+                <rect x="4" y="6" width="8" height="3" fill="#fff" />
+                <rect x="6" y="6" width="4" height="3" fill="#000" />
+              </svg>
+              <h1>Silicon_Dreams.exe</h1>
+            </div>
+            <div class="win-sys-btns" aria-hidden="true">
+              <span class="win-btn win-btn-mini">_</span>
+              <span class="win-btn win-btn-mini">×</span>
+            </div>
+          </div>
+          <div class="brand-body">
+            <div class="brand-controls">
+              <div class="mode-switch" id="mode-switch" role="group" aria-label="Modo de iluminación">
+                <button class="win-btn mode-btn active" type="button" data-mode="day">Día</button>
+                <button class="win-btn mode-btn" type="button" data-mode="night">Noche</button>
+              </div>
+              <span class="win-sunken status-cell" id="backend-badge">…</span>
+            </div>
+            <div class="status-strip">
+              <span class="win-sunken status-cell grow" id="stats-line">Cargando geometría…</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="win-window controls-panel">
+          <div class="win-titlebar">
+            <div class="win-title-left">
+              <svg width="13" height="13" viewBox="0 0 16 16" aria-hidden="true" shape-rendering="crispEdges">
+                <polygon points="8,1 15,14 1,14" fill="#ff0" stroke="#000" stroke-width="1" />
+                <rect x="7" y="6" width="2" height="4" fill="#000" />
+                <rect x="7" y="11" width="2" height="2" fill="#000" />
+              </svg>
+              <span>Propiedades</span>
+            </div>
+            <button
+              class="win-btn win-btn-mini"
+              id="collapse-btn"
+              type="button"
+              aria-label="Mostrar u ocultar ajustes"
+              aria-expanded="false"
+            >+</button>
+          </div>
+          <div class="controls-body collapsed" id="controls-body">
+            <div class="win-group">
+              <label class="select-row">
+                <span>Calidad</span>
+                <select id="opt-quality">
+                  <option value="eco">Eco (On-Demand)</option>
+                  <option value="balanced" selected>Equilibrado</option>
+                  <option value="ultra">Ultra (+GTAO)</option>
+                </select>
+              </label>
+              <label class="check-row">
+                <span>Órbita 360°</span>
+                <input type="checkbox" id="opt-orbit" />
+              </label>
+              <label class="check-row">
+                <span>GTAO (Oclusión)</span>
+                <input type="checkbox" id="opt-ao" />
+              </label>
+              <label class="check-row">
+                <span>Bloom &amp; Halation</span>
+                <input type="checkbox" id="opt-bloom" checked />
+              </label>
+              <label class="check-row">
+                <span>Cinta onírica · Grano &amp; color</span>
+                <input type="checkbox" id="opt-grain" checked />
+              </label>
+              <div class="slider-row">
+                <div><label for="opt-grain-amount">Textura de cinta</label><span id="val-grain-amount">1.00</span></div>
+                <input type="range" id="opt-grain-amount" min="0" max="1.8" step="0.05" value="1" />
+              </div>
+              <label class="check-row">
+                <span>Nubes<span class="day-only"> &amp; Arcoíris</span></span>
+                <input type="checkbox" id="opt-clouds" checked />
+              </label>
+              <div class="slider-row">
+                <div><label for="opt-exposure">Exposición AgX</label><span id="val-exposure">1.16</span></div>
+                <input type="range" id="opt-exposure" min="0.6" max="1.6" step="0.02" value="1.16" />
+              </div>
+              <div class="slider-row day-only">
+                <div><label for="opt-rainbow">Arcoíris</label><span id="val-rainbow">0.65</span></div>
+                <input type="range" id="opt-rainbow" min="0" max="1.0" step="0.02" value="0.65" />
+              </div>
+            </div>
+            <div class="night-only night-section">
+              <label class="select-row">
+                <span>CRT</span>
+                <select id="opt-crt-state">
+                  <option value="0">Apagado</option>
+                  <option value="1">Estática</option>
+                  <option value="2" selected>Ojo</option>
+                  <option value="3">Señal</option>
+                </select>
+              </label>
+              <label class="select-row">
+                <span>TV</span>
+                <select id="opt-tv-state">
+                  <option value="0">Negro</option>
+                  <option value="1">Estática</option>
+                  <option value="2" selected>Múltiples ojos</option>
+                </select>
+              </label>
+              <label class="check-row">
+                <span>Niebla baja</span>
+                <input type="checkbox" id="opt-mist" checked />
+              </label>
+              <label class="check-row">
+                <span>Ojos y telarañas</span>
+                <input type="checkbox" id="opt-horror" checked />
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="taskbar">
+        <span class="start-chip" aria-hidden="true">
+          <svg width="13" height="13" viewBox="0 0 16 16" shape-rendering="crispEdges">
+            <rect x="1" y="2" width="6" height="5" fill="#d4352a" />
+            <rect x="9" y="2" width="6" height="5" fill="#2e9f43" />
+            <rect x="1" y="9" width="6" height="5" fill="#1870cc" />
+            <rect x="9" y="9" width="6" height="5" fill="#e6b822" />
+          </svg>
+          Cámaras
+        </span>
+        <span class="taskbar-divider" aria-hidden="true"></span>
+        <div class="camera-dock" id="camera-dock"></div>
+      </div>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
