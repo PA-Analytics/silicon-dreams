@@ -27,7 +27,7 @@
 
 ## Running Locally
 
-Requires **Node.js 22.6+** if running `npm test` (uses `--experimental-strip-types`).
+Requires a Node.js runtime supporting `--experimental-strip-types` to run `npm test`.
 
 ```bash
 npm install
