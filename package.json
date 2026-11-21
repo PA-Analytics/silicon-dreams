@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "test": "node --experimental-strip-types tests/grain-clock.test.ts",
+    "test": "node --experimental-strip-types tests/grain-clock.test.ts && node --experimental-strip-types --test tests/chat.test.ts",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview"
   },

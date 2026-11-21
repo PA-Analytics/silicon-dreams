@@ -10,6 +10,12 @@
 
 ## Current Features
 
+- **entidad.exe:** Win95 chat with an OpenClaw agent using Cerebras Kimi K3.1 Pro;
+  allowlisted reply tags can request Day/Night transitions through signal.exe.
+  Set server-only gateway env vars to connect; missing configuration shows a lost
+  signal, never a fake reply. See [OpenClaw setup](openclaw/README.md) for dedicated
+  Kimi endpoint requirements, local API setup, deployment and security guidance.
+
 - **Real-time 3D WebGPU / TSL rendering:** Built with `Three.js` `WebGPURenderer` and automatic `WebGL2` fallback, showing the active backend (`WebGPU · TSL` or `WebGL2 · TSL`) in the HUD.
 - **Day & Night modes:** Switch between bright dreamcore twilight (`Día`) and liminal psychological horror (`Noche`), or boot directly into Night mode with `?mode=night`. Includes a Win95-styled transition dialog (`signal.exe`), lazy-loaded night geometry/textures/mist/backdrop, and Night controls for CRT state, TV state, low mist, and eyes/cobwebs.
 - **Custom TSL shaders & post-processing pipeline:** Procedural concrete, terrain, foliage, glass, CRT/TV screens, sky dome, and clouds paired with `Eco`, `Balanced`, and `Ultra` quality presets, optional GTAO, Bloom & Halation, FXAA, and 15 Hz analog tape film grain.
