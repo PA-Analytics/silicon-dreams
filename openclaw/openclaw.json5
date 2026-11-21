@@ -1,0 +1,37 @@
+{
+  agents: {
+    defaults: {
+      workspace: "${SILICON_DREAMS_WORKSPACE}",
+      model: { primary: "cerebras/kimi-k3.1-pro" },
+      models: { "cerebras/kimi-k3.1-pro": {} },
+    },
+  },
+  models: {
+    mode: "merge",
+    providers: {
+      cerebras: {
+        baseUrl: "https://api.cerebras.ai/v1",
+        apiKey: "${CEREBRAS_API_KEY}",
+        api: "openai-completions",
+        models: [{
+          // Dedicated Inference: replace this ID AND both agent references
+          // above with your organization's assigned endpoint ID if required.
+          id: "kimi-k3.1-pro",
+          name: "Kimi K3.1 Pro (Cerebras)",
+          reasoning: true,
+          input: ["text"],
+        }],
+      },
+    },
+  },
+  // No executable tools, including plugin tools. Persona is bootstrapped
+  // through workspace AGENTS.md; it does not require the read tool.
+  tools: { profile: "minimal", deny: ["*"] },
+  gateway: {
+    mode: "local",
+    bind: "loopback",
+    port: 18789,
+    auth: { mode: "token", token: "${OPENCLAW_GATEWAY_TOKEN}" },
+    http: { endpoints: { chatCompletions: { enabled: true } } },
+  },
+}
