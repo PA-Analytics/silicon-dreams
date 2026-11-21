@@ -1,8 +1,9 @@
 import { parseReply, type SceneAction } from './chat-actions.ts';
+import { createConversationId } from './chat-session.ts';
 import './chat.css';
 
 export function createChat(execute: (action: SceneAction) => Promise<void>) {
-  let conversationId: string = crypto.randomUUID();
+  let conversationId = createConversationId();
   try {
     const stored = sessionStorage.getItem('dream-conversation');
     if (stored && /^[a-zA-Z0-9_-]{16,80}$/.test(stored)) conversationId = stored;

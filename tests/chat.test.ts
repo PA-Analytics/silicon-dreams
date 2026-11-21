@@ -3,6 +3,23 @@ import assert from 'node:assert/strict';
 import { parseReply } from '../src/chat-actions.ts';
 import { chat } from '../server/chat-core.ts';
 import { handleChat } from '../api/chat.ts';
+import { createConversationId, initializeChat } from '../src/chat-session.ts';
+
+test('conversation IDs work without secure-context randomUUID', () => {
+  const random = { getRandomValues: crypto.getRandomValues.bind(crypto) };
+  const id = createConversationId(random);
+  assert.match(id, /^[a-zA-Z0-9_-]{16,80}$/);
+  assert.notEqual(id, createConversationId(random));
+});
+
+test('chat setup failures are contained and successful cleanup is retained', (t) => {
+  const errors = t.mock.method(console, 'error', () => {});
+  assert.equal(initializeChat(() => { throw new Error('DOM or crypto unavailable'); }), undefined);
+  assert.equal(errors.mock.callCount(), 1);
+  let disposed = false;
+  initializeChat(() => ({ dispose() { disposed = true; } }))?.dispose();
+  assert.equal(disposed, true);
+});
 
 const body = { message: 'Hola', conversationId: '12345678-1234-1234-1234-123456789abc' };
 const env = { OPENCLAW_GATEWAY_URL: 'http://localhost:18789/', OPENCLAW_GATEWAY_TOKEN: 'test-token' };

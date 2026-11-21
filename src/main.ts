@@ -9,6 +9,7 @@ import { createSiliconMaterialLibrary, upgradeSceneMaterials, createNightMateria
 import { createPostPipeline, type QualityTier } from './pipeline.ts';
 import { createModeTransition } from "./mode-transition.ts";
 import { createChat } from './chat.ts';
+import { initializeChat } from './chat-session.ts';
 
 const NIGHT_CAMERA_LABELS: Record<string, string> = {
   CAM_DN_04_tower_window: 'Ojo Ventana',
@@ -595,7 +596,7 @@ async function init(): Promise<void> {
         }
       }, minMs);
   };
-  const chatWindow = createChat(async (action) => { await requestMode(action.mode); });
+  const chatWindow = initializeChat(() => createChat(async (action) => { await requestMode(action.mode); }));
   for (const btn of modeButtons) {
     btn.addEventListener('click', () => { void requestMode(btn.dataset.mode === 'night' ? 'night' : 'day'); });
   }
@@ -814,7 +815,7 @@ async function init(): Promise<void> {
   const cleanup = () => {
     ro.disconnect();
     modeTransition.dispose();
-    chatWindow.dispose();
+    chatWindow?.dispose();
     post.dispose();
     renderer.setAnimationLoop(null);
     scene.traverse((child) => {
