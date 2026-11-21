@@ -8,6 +8,7 @@ import { createCloudMaterial, createSkyDome, createTwilightEnvironment, createNi
 import { createSiliconMaterialLibrary, upgradeSceneMaterials, createNightMaterialControls, upgradeNightExtras } from './shaders/materials.ts';
 import { createPostPipeline, type QualityTier } from './pipeline.ts';
 import { createModeTransition } from "./mode-transition.ts";
+import { createChat } from './chat.ts';
 
 const NIGHT_CAMERA_LABELS: Record<string, string> = {
   CAM_DN_04_tower_window: 'Ojo Ventana',
@@ -580,12 +581,10 @@ async function init(): Promise<void> {
     wakeRenderer(1500);
   };
 
-  for (const btn of modeButtons) {
-    btn.addEventListener('click', () => {
-      const m = btn.dataset.mode === 'night' ? 'night' : 'day';
+  const requestMode = async (m: SceneMode) => {
       if (m === currentMode || modeTransition.busy) return;
       const minMs = nightLoaded ? 600 : 1000;
-      void modeTransition.run(m, async () => {
+      await modeTransition.run(m, async () => {
         controls.enabled = false;
         try {
           await applyMode(m);
@@ -595,7 +594,10 @@ async function init(): Promise<void> {
           controls.enabled = true;
         }
       }, minMs);
-    });
+  };
+  const chatWindow = createChat(async (action) => { await requestMode(action.mode); });
+  for (const btn of modeButtons) {
+    btn.addEventListener('click', () => { void requestMode(btn.dataset.mode === 'night' ? 'night' : 'day'); });
   }
 
   // Sync exposure UI if starting directly in ?mode=night
@@ -812,6 +814,7 @@ async function init(): Promise<void> {
   const cleanup = () => {
     ro.disconnect();
     modeTransition.dispose();
+    chatWindow.dispose();
     post.dispose();
     renderer.setAnimationLoop(null);
     scene.traverse((child) => {
@@ -838,4 +841,3 @@ init().catch((err) => {
   if (status) status.textContent = `Error: ${err instanceof Error ? err.message : String(err)}`;
   console.error(err);
 });
-

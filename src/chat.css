@@ -1,0 +1,11 @@
+.entity-window { position: absolute; right: 12px; bottom: 64px; width: min(380px, calc(100vw - 24px)); font-size: 12px; }
+.entity-window[hidden] { display: none; }
+.entity-close { padding: 0 5px; min-height: 18px; }
+.entity-log { background: #fff; color: #18251f; border: 2px inset #eee; height: min(240px, 32vh); overflow-y: auto; margin: 6px; padding: 8px; }
+.entity-log p { margin: 0 0 10px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.entity-form { margin: 8px; }
+.entity-form label { display: block; margin-bottom: 5px; }
+.entity-form > div { display: flex; gap: 6px; }
+.entity-form input { min-width: 0; flex: 1; font: inherit; padding: 6px; border: 2px inset #eee; background: white; color: #111; }
+.entity-status { margin: 8px; }
+.entity-toggle { flex-shrink: 0; pointer-events: auto; }
